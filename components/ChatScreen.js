@@ -1,5 +1,6 @@
-import React from "react";
+import { useState } from "react";
 import { useRouter } from "next/router";
+import firebase from "firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useCollection } from "react-firebase-hooks/firestore";
 import { auth, db } from "../firebase";
@@ -9,9 +10,11 @@ import MoreVertIcon from "@material-ui/icons/MoreVert";
 import AttachFileIcon from "@material-ui/icons/AttachFile";
 import InsertEmoticonIcon from "@material-ui/icons/InsertEmoticon";
 import MicIcon from "@material-ui/icons/Mic";
+import Message from "./Message";
 
 const ChatScreen = ({ chat, messages }) => {
   const [user] = useAuthState(auth);
+  const [input, setInput] = useState("");
   const router = useRouter();
   const [messagesSnapshot] = useCollection(
     db
@@ -33,7 +36,32 @@ const ChatScreen = ({ chat, messages }) => {
           }}
         />
       ));
+    } else {
+      return JSON.parse(messages).map((message) => (
+        <Message key={message.id} user={message.user} message={message} />
+      ));
     }
+  };
+
+  const sendMessage = (e) => {
+    e.preventDefault();
+
+    // Update the Last Seen
+    db.collection("users").doc(user.uid).set(
+      {
+        lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    );
+
+    db.collection("chats").doc(router.query.id).collection("messages").add({
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      message: input,
+      user: user.email,
+      photoURL: user.photoURL,
+    });
+
+    setInput("");
   };
 
   return (
@@ -62,7 +90,10 @@ const ChatScreen = ({ chat, messages }) => {
 
       <InputContainer>
         <InsertEmoticonIcon />
-        <Input />
+        <Input value={input} onChange={(e) => setInput(e.target.value)} />
+        <button hidden disabled={!input} type="submit" onClick={sendMessage}>
+          Send Message
+        </button>
         <MicIcon />
       </InputContainer>
     </Container>
