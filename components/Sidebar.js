@@ -44,7 +44,7 @@ function Sidebar() {
   return (
     <Container>
       <Header>
-        <UserAvatar onClick={() => auth.signOut()} />
+        <UserAvatar src={user.photoURL} onClick={() => auth.signOut()} />
 
         <IconsContainer>
           <IconButton>
@@ -80,7 +80,7 @@ const Header = styled.div`
   position: sticky;
   z-index: 1;
   top: 0;
-  heigth: 80px;
+  height: 80px;
   padding: 15px;
   justify-content: space-between;
   align-items: center;
